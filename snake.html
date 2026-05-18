@@ -123,9 +123,9 @@
       grid-template-areas:
         ". up ."
         "left down right";
-      grid-template-columns: repeat(3, 16vw);
-      grid-template-rows: repeat(2, 16vw);
-      gap: 2vw;
+      grid-template-columns: repeat(3, min(16vw, 64px));
+      grid-template-rows: repeat(2, min(16vw, 64px));
+      gap: min(2vw, 8px);
       pointer-events: auto;
     }
 
