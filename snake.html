@@ -22,7 +22,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      width: 500px;
+      width: min(500px, calc(100vw - 32px));
       margin-bottom: 12px;
     }
 
@@ -70,6 +70,8 @@
       border-radius: 12px;
       display: block;
       background: #161b22;
+      width: 100%;
+      aspect-ratio: 1 / 1;
     }
 
     .controls {
@@ -108,32 +110,35 @@
       position: relative;
       display: inline-block;
       line-height: 0;
+      width: min(500px, calc(100vw - 32px));
     }
 
     /* D-pad overlay */
     .dpad {
       position: absolute;
-      bottom: 18px;
+      bottom: 3%;
       left: 50%;
       transform: translateX(-50%);
       display: grid;
       grid-template-areas:
         ". up ."
         "left down right";
-      grid-template-columns: repeat(3, 72px);
-      grid-template-rows: repeat(2, 72px);
-      gap: 6px;
+      grid-template-columns: repeat(3, 14%);
+      grid-template-rows: repeat(2, 14%);
+      width: 50%;
+      gap: 1.5%;
       pointer-events: auto;
     }
 
     .dpad button {
-      width: 72px;
-      height: 72px;
+      width: 100%;
+      aspect-ratio: 1;
+      height: auto;
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 16px;
       background: rgba(255, 255, 255, 0.07);
       color: rgba(255, 255, 255, 0.35);
-      font-size: 26px;
+      font-size: clamp(14px, 4vw, 26px);
       cursor: pointer;
       transition: background 0.1s, color 0.1s, transform 0.08s;
       display: flex;
