@@ -103,36 +103,52 @@
       color: #4a5568;
     }
 
-    /* D-pad */
+    /* Canvas wrapper — needed so the D-pad can sit on top */
+    .canvas-wrap {
+      position: relative;
+      display: inline-block;
+      line-height: 0;
+    }
+
+    /* D-pad overlay */
     .dpad {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
       display: grid;
       grid-template-areas:
         ". up ."
         "left down right";
-      grid-template-columns: repeat(3, 64px);
-      grid-template-rows: repeat(2, 64px);
+      grid-template-columns: repeat(3, 72px);
+      grid-template-rows: repeat(2, 72px);
       gap: 6px;
-      margin-top: 18px;
+      pointer-events: auto;
     }
 
     .dpad button {
-      width: 64px;
-      height: 64px;
-      border: none;
-      border-radius: 14px;
-      background: #1e2633;
-      color: #a0aec0;
+      width: 72px;
+      height: 72px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.07);
+      color: rgba(255, 255, 255, 0.35);
       font-size: 26px;
       cursor: pointer;
-      transition: background 0.12s, transform 0.08s;
+      transition: background 0.1s, color 0.1s, transform 0.08s;
       display: flex;
       align-items: center;
       justify-content: center;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
+      backdrop-filter: blur(2px);
     }
 
-    .dpad button:active { background: #38a169; color: #fff; transform: scale(0.92); }
+    .dpad button:active {
+      background: rgba(56, 161, 105, 0.45);
+      color: rgba(255, 255, 255, 0.9);
+      transform: scale(0.92);
+    }
 
     .dpad .up    { grid-area: up; }
     .dpad .left  { grid-area: left; }
@@ -175,19 +191,20 @@
     </div>
   </div>
 
-  <canvas id="gameCanvas" width="500" height="500"></canvas>
+  <div class="canvas-wrap">
+    <canvas id="gameCanvas" width="500" height="500"></canvas>
+    <div class="dpad">
+      <button class="up"    id="dUp">▲</button>
+      <button class="left"  id="dLeft">◀</button>
+      <button class="down"  id="dDown">▼</button>
+      <button class="right" id="dRight">▶</button>
+    </div>
+  </div>
 
   <div class="controls">
     <button id="btnStart">Start</button>
   </div>
-  <div class="hint">Arrow keys or WASD to move</div>
-
-  <div class="dpad">
-    <button class="up"    id="dUp">▲</button>
-    <button class="left"  id="dLeft">◀</button>
-    <button class="down"  id="dDown">▼</button>
-    <button class="right" id="dRight">▶</button>
-  </div>
+  <div class="hint">Arrow keys · WASD · D-pad to move</div>
 
   <script>
     const canvas = document.getElementById('gameCanvas');
