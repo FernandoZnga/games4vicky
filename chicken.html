@@ -104,6 +104,71 @@
       color: #4a5568;
     }
 
+    /* ── Difficulty modal ── */
+    #diffModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      animation: fadeIn 0.2s ease;
+    }
+    #diffModal.hidden { display: none; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .diff-box {
+      background: #161b22;
+      border: 2px solid #2d3748;
+      border-radius: 20px;
+      padding: 32px 28px;
+      text-align: center;
+      width: min(340px, calc(100vw - 40px));
+    }
+    .diff-box h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #f6e05e;
+      margin-bottom: 6px;
+    }
+    .diff-box p {
+      font-size: 13px;
+      color: #718096;
+      margin-bottom: 24px;
+    }
+    .diff-levels {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .diff-btn {
+      width: 100%;
+      padding: 14px 20px;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: transform 0.1s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .diff-btn:active { transform: scale(0.97); }
+    .diff-btn .diff-icon { font-size: 26px; }
+    .diff-btn .diff-info { text-align: left; }
+    .diff-btn .diff-name { font-size: 16px; display: block; }
+    .diff-btn .diff-desc { font-size: 11px; font-weight: 400; opacity: 0.75; display: block; margin-top: 2px; }
+    .diff-btn.beginner { background: #1a2e1a; color: #86efac; border-color: #166534; }
+    .diff-btn.beginner:hover { border-color: #4ade80; box-shadow: 0 0 14px rgba(74,222,128,0.2); }
+    .diff-btn.advanced { background: #2a1f0e; color: #fcd34d; border-color: #92400e; }
+    .diff-btn.advanced:hover { border-color: #f59e0b; box-shadow: 0 0 14px rgba(245,158,11,0.2); }
+    .diff-btn.pro      { background: #2a1010; color: #fca5a5; border-color: #7f1d1d; }
+    .diff-btn.pro:hover { border-color: #f87171; box-shadow: 0 0 14px rgba(248,113,113,0.2); }
+
     /* D-pad overlay */
     .dpad {
       position: absolute;
@@ -150,6 +215,37 @@
   </style>
 </head>
 <body>
+
+  <!-- Difficulty selection modal -->
+  <div id="diffModal" class="hidden">
+    <div class="diff-box">
+      <h2>🐔 Choose Difficulty</h2>
+      <p>How fast do you want the cars?</p>
+      <div class="diff-levels">
+        <button class="diff-btn beginner" data-level="beginner">
+          <span class="diff-icon">🌱</span>
+          <span class="diff-info">
+            <span class="diff-name">Beginner</span>
+            <span class="diff-desc">Slow traffic — learn the ropes</span>
+          </span>
+        </button>
+        <button class="diff-btn advanced" data-level="advanced">
+          <span class="diff-icon">🔥</span>
+          <span class="diff-info">
+            <span class="diff-name">Advanced</span>
+            <span class="diff-desc">Normal speed — a real challenge</span>
+          </span>
+        </button>
+        <button class="diff-btn pro" data-level="pro">
+          <span class="diff-icon">💀</span>
+          <span class="diff-info">
+            <span class="diff-name">Pro</span>
+            <span class="diff-desc">Blazing fast — good luck!</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <header>
     <h1>🐔 Chicken Crossing</h1>
@@ -220,8 +316,12 @@
 
     // ── Init ─────────────────────────────────────────────────────────────────
 
+    const SPEED_MULTIPLIER = { beginner: 0.5, advanced: 1.0, pro: 1.8 };
+    let currentLevel = 'advanced';
+
     function initCars() {
       cars = [];
+      const mult = SPEED_MULTIPLIER[currentLevel];
       LANE_CONFIGS.forEach(cfg => {
         const spacing = W / cfg.carCount;
         for (let i = 0; i < cfg.carCount; i++) {
@@ -234,7 +334,7 @@
             y:     cfg.row * TILE + 2,
             w:     cw,
             h:     TILE - 4,
-            speed: cfg.speed * cfg.dir,
+            speed: cfg.speed * cfg.dir * mult,
             color: cfg.color,
           });
         }
@@ -509,7 +609,17 @@
       if (d) { moveChicken(d[0], d[1]); e.preventDefault(); }
     });
 
-    document.getElementById('btnStart').addEventListener('click', startGame);
+    document.getElementById('btnStart').addEventListener('click', () => {
+      document.getElementById('diffModal').classList.remove('hidden');
+    });
+
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentLevel = btn.dataset.level;
+        document.getElementById('diffModal').classList.add('hidden');
+        startGame();
+      });
+    });
 
     const dpadMap = { dUp: [0,-1], dDown: [0,1], dLeft: [-1,0], dRight: [1,0] };
     Object.entries(dpadMap).forEach(([id, d]) => {
