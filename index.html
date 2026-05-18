@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Games Portal</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #0d1117;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', sans-serif;
+      color: #e2e8f0;
+    }
+
+    .portal-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: #4a5568;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 42px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #63b3ed, #68d391);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 48px;
+    }
+
+    .cards {
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .card {
+      text-decoration: none;
+      background: #161b22;
+      border: 2px solid #21262d;
+      border-radius: 20px;
+      width: 220px;
+      padding: 36px 24px 28px;
+      text-align: center;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .card.calc:hover { border-color: #4299e1; }
+    .card.snake:hover { border-color: #68d391; }
+    .card.ttt:hover   { border-color: #f6ad55; }
+
+    .card .icon {
+      font-size: 56px;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .card .name {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .card.calc .name { color: #63b3ed; }
+    .card.snake .name { color: #68d391; }
+    .card.ttt .name   { color: #f6ad55; }
+
+    .card .desc {
+      font-size: 13px;
+      color: #718096;
+      line-height: 1.5;
+    }
+
+    .card .play-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 8px 22px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+    }
+
+    .card.calc .play-btn  { background: #2b6cb0; color: #fff; }
+    .card.snake .play-btn { background: #276749; color: #fff; }
+    .card.ttt .play-btn   { background: #7b341e; color: #fff; }
+
+    footer {
+      margin-top: 52px;
+      font-size: 12px;
+      color: #2d3748;
+    }
+  </style>
+</head>
+<body>
+
+  <p class="portal-title">Choose a Game</p>
+  <h1>Mini Portal</h1>
+
+  <div class="cards">
+    <a class="card calc" href="calculator.html">
+      <span class="icon">🧮</span>
+      <div class="name">Calculator</div>
+      <div class="desc">A clean, dark-themed calculator with keyboard support.</div>
+      <div class="play-btn">Open</div>
+    </a>
+
+    <a class="card snake" href="snake.html">
+      <span class="icon">🐍</span>
+      <div class="name">Number Snake</div>
+      <div class="desc">Eat numbers to grow. Don't bite your own tail!</div>
+      <div class="play-btn">Play</div>
+    </a>
+
+    <a class="card ttt" href="tictactoe.html">
+      <span class="icon">✕○</span>
+      <div class="name">Tic Tac Toe</div>
+      <div class="desc">Pass-and-play for two players. X vs O, first to three wins!</div>
+      <div class="play-btn">Play</div>
+    </a>
+  </div>
+
+  <footer>Use arrow keys or WASD in Snake &nbsp;·&nbsp; Keyboard supported in Calculator</footer>
+
+</body>
+</html>
