@@ -103,6 +103,42 @@
       color: #4a5568;
     }
 
+    /* D-pad */
+    .dpad {
+      display: grid;
+      grid-template-areas:
+        ". up ."
+        "left down right";
+      grid-template-columns: repeat(3, 64px);
+      grid-template-rows: repeat(2, 64px);
+      gap: 6px;
+      margin-top: 18px;
+    }
+
+    .dpad button {
+      width: 64px;
+      height: 64px;
+      border: none;
+      border-radius: 14px;
+      background: #1e2633;
+      color: #a0aec0;
+      font-size: 26px;
+      cursor: pointer;
+      transition: background 0.12s, transform 0.08s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .dpad button:active { background: #38a169; color: #fff; transform: scale(0.92); }
+
+    .dpad .up    { grid-area: up; }
+    .dpad .left  { grid-area: left; }
+    .dpad .down  { grid-area: down; }
+    .dpad .right { grid-area: right; }
+
     /* Overlay */
     #overlay {
       position: absolute;
@@ -145,6 +181,13 @@
     <button id="btnStart">Start</button>
   </div>
   <div class="hint">Arrow keys or WASD to move</div>
+
+  <div class="dpad">
+    <button class="up"    id="dUp">▲</button>
+    <button class="left"  id="dLeft">◀</button>
+    <button class="down"  id="dDown">▼</button>
+    <button class="right" id="dRight">▶</button>
+  </div>
 
   <script>
     const canvas = document.getElementById('gameCanvas');
@@ -374,6 +417,24 @@
     document.getElementById('btnStart').addEventListener('click', () => {
       document.getElementById('btnStart').textContent = 'Restart';
       init();
+    });
+
+    // D-pad buttons
+    const dpadMap = {
+      dUp:    { x: 0, y: -1 },
+      dDown:  { x: 0, y:  1 },
+      dLeft:  { x: -1, y: 0 },
+      dRight: { x:  1, y: 0 },
+    };
+
+    Object.entries(dpadMap).forEach(([id, d]) => {
+      const btn = document.getElementById(id);
+      ['click', 'touchstart'].forEach(evt =>
+        btn.addEventListener(evt, e => {
+          e.preventDefault();
+          if (running && (d.x !== -dir.x || d.y !== -dir.y)) nextDir = d;
+        }, { passive: false })
+      );
     });
 
     // Initial screen

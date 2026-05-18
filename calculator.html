@@ -119,9 +119,23 @@
     .btn-zero {
       grid-column: span 2;
     }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: #a0aec0;
+      text-decoration: none;
+      font-size: 13px;
+      font-family: 'Segoe UI', sans-serif;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover { color: #63b3ed; }
   </style>
 </head>
 <body>
+  <div style="display:flex;flex-direction:column;align-items:center;">
+  <a class="back-link" href="index.html">← Back to Portal</a>
   <div class="calculator">
     <div class="display">
       <div class="expression" id="expression"></div>
@@ -152,6 +166,7 @@
       <button class="btn-number" onclick="inputDecimal()">.</button>
       <button class="btn-equals" onclick="calculate()">=</button>
     </div>
+  </div>
   </div>
 
   <script>
