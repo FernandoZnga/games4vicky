@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chicken Crossing</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #0d1117;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', sans-serif;
+      color: #e2e8f0;
+      padding: 16px 0;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: min(500px, calc(100vw - 32px));
+      margin-bottom: 12px;
+    }
+
+    header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #f6e05e;
+      letter-spacing: 1px;
+    }
+
+    .back-link {
+      color: #a0aec0;
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: #f6e05e; }
+
+    .scoreboard {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 12px;
+    }
+
+    .score-box { text-align: center; }
+    .score-box .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #718096;
+    }
+    .score-box .value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #f6e05e;
+    }
+    #lives { font-size: 20px; line-height: 1.8; }
+
+    .canvas-wrap {
+      position: relative;
+      display: inline-block;
+      line-height: 0;
+      width: min(500px, calc(100vw - 32px));
+    }
+
+    #gameCanvas {
+      border: 2px solid #2d3748;
+      border-radius: 12px;
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #161b22;
+    }
+
+    .controls {
+      margin-top: 14px;
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      padding: 10px 28px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.15s;
+    }
+    button:active { transform: scale(0.95); }
+
+    #btnStart { background: #b7791f; color: #fff; }
+    #btnStart:hover { background: #d69e2e; }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #4a5568;
+    }
+
+    /* D-pad overlay */
+    .dpad {
+      position: absolute;
+      bottom: 3%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: grid;
+      grid-template-areas:
+        ". up ."
+        "left down right";
+      grid-template-columns: repeat(3, 14%);
+      grid-template-rows: repeat(2, 14%);
+      width: 50%;
+      gap: 1.5%;
+      pointer-events: auto;
+    }
+
+    .dpad button {
+      width: 100%;
+      aspect-ratio: 1;
+      height: auto;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.07);
+      color: rgba(255, 255, 255, 0.35);
+      font-size: clamp(14px, 4vw, 26px);
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s, transform 0.08s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      backdrop-filter: blur(2px);
+      padding: 0;
+    }
+    .dpad button:active {
+      background: rgba(214, 158, 46, 0.45);
+      color: rgba(255, 255, 255, 0.9);
+      transform: scale(0.92);
+    }
+    .dpad .up    { grid-area: up; }
+    .dpad .left  { grid-area: left; }
+    .dpad .down  { grid-area: down; }
+    .dpad .right { grid-area: right; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🐔 Chicken Crossing</h1>
+    <a class="back-link" href="index.html">← Back to Portal</a>
+  </header>
+
+  <div class="scoreboard">
+    <div class="score-box">
+      <div class="label">Score</div>
+      <div class="value" id="score">0</div>
+    </div>
+    <div class="score-box">
+      <div class="label">Lives</div>
+      <div class="value" id="lives">🐔🐔🐔</div>
+    </div>
+    <div class="score-box">
+      <div class="label">Best</div>
+      <div class="value" id="best">0</div>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="gameCanvas" width="500" height="500"></canvas>
+    <div class="dpad">
+      <button class="up"    id="dUp">▲</button>
+      <button class="left"  id="dLeft">◀</button>
+      <button class="down"  id="dDown">▼</button>
+      <button class="right" id="dRight">▶</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="btnStart">Start</button>
+  </div>
+  <div class="hint">Arrow keys · WASD · D-pad to move</div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx    = canvas.getContext('2d');
+
+    const TILE = 50;
+    const COLS = 10;
+    const ROWS = 10;
+    const W    = COLS * TILE;
+    const H    = ROWS * TILE;
+
+    // Row 0 = finish (top), Row 9 = start (bottom), Rows 1-8 = road
+    const LANE_CONFIGS = [
+      { row: 1, dir:  1, speed: 1.8, color: '#ef4444', carWidth: 2.0, carCount: 2 },
+      { row: 2, dir: -1, speed: 1.2, color: '#f97316', carWidth: 1.6, carCount: 3 },
+      { row: 3, dir:  1, speed: 2.6, color: '#eab308', carWidth: 2.2, carCount: 2 },
+      { row: 4, dir: -1, speed: 1.5, color: '#22c55e', carWidth: 1.8, carCount: 3 },
+      { row: 5, dir:  1, speed: 3.0, color: '#3b82f6', carWidth: 2.0, carCount: 2 },
+      { row: 6, dir: -1, speed: 2.0, color: '#a855f7', carWidth: 1.5, carCount: 3 },
+      { row: 7, dir:  1, speed: 2.4, color: '#f43f5e', carWidth: 2.3, carCount: 2 },
+      { row: 8, dir: -1, speed: 1.0, color: '#f59e0b', carWidth: 1.8, carCount: 3 },
+    ];
+
+    let cars = [];
+    let chicken;
+    let score, best, lives;
+    let gameState = 'idle'; // idle | playing | dead | gameover
+    let deathTimer = 0;
+    let scoreFlash = 0;
+
+    best = parseInt(localStorage.getItem('chickenBest') || '0');
+    document.getElementById('best').textContent = best;
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+
+    function initCars() {
+      cars = [];
+      LANE_CONFIGS.forEach(cfg => {
+        const spacing = W / cfg.carCount;
+        for (let i = 0; i < cfg.carCount; i++) {
+          const cw = cfg.carWidth * TILE;
+          const startX = cfg.dir > 0
+            ? i * spacing
+            : W - i * spacing - cw;
+          cars.push({
+            x:     startX,
+            y:     cfg.row * TILE + 2,
+            w:     cw,
+            h:     TILE - 4,
+            speed: cfg.speed * cfg.dir,
+            color: cfg.color,
+          });
+        }
+      });
+    }
+
+    function initChicken() {
+      chicken = { col: 4, row: ROWS - 1 };
+    }
+
+    function startGame() {
+      score = 0;
+      lives = 3;
+      updateHUD();
+      initCars();
+      initChicken();
+      gameState = 'playing';
+      document.getElementById('btnStart').textContent = 'Restart';
+    }
+
+    function updateHUD() {
+      document.getElementById('score').textContent = score;
+      document.getElementById('lives').textContent = '🐔'.repeat(Math.max(lives, 0));
+      document.getElementById('best').textContent  = best;
+    }
+
+    // ── Movement ─────────────────────────────────────────────────────────────
+
+    function moveChicken(dx, dy) {
+      if (gameState !== 'playing') return;
+      const nx = chicken.col + dx;
+      const ny = chicken.row + dy;
+      if (nx < 0 || nx >= COLS) return;
+      if (ny >= ROWS) return;
+      if (ny < 0) {
+        // Reached the finish line!
+        score++;
+        scoreFlash = 40;
+        if (score > best) {
+          best = score;
+          localStorage.setItem('chickenBest', best);
+        }
+        updateHUD();
+        initChicken();
+        return;
+      }
+      chicken.col = nx;
+      chicken.row = ny;
+    }
+
+    // ── Collision ─────────────────────────────────────────────────────────────
+
+    function checkCollision() {
+      const margin = 6;
+      const cx = chicken.col * TILE + margin;
+      const cy = chicken.row * TILE + margin;
+      const cw = TILE - margin * 2;
+      const ch = TILE - margin * 2;
+      for (const car of cars) {
+        if (cx < car.x + car.w && cx + cw > car.x &&
+            cy < car.y + car.h && cy + ch > car.y) {
+          lives--;
+          gameState = 'dead';
+          deathTimer = 80;
+          updateHUD();
+          return;
+        }
+      }
+    }
+
+    function resumeAfterDeath() {
+      if (lives <= 0) {
+        gameState = 'gameover';
+      } else {
+        initChicken();
+        gameState = 'playing';
+      }
+    }
+
+    // ── Drawing ───────────────────────────────────────────────────────────────
+
+    function drawBackground() {
+      // Road
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, TILE, W, 8 * TILE);
+
+      // Dashed lane dividers
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([TILE * 0.35, TILE * 0.3]);
+      for (let row = 2; row <= 8; row++) {
+        ctx.beginPath();
+        ctx.moveTo(0, row * TILE);
+        ctx.lineTo(W, row * TILE);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+
+      // Finish zone (top)
+      ctx.fillStyle = '#14532d';
+      ctx.fillRect(0, 0, W, TILE);
+      ctx.fillStyle = 'rgba(74,222,128,0.15)';
+      for (let x = 0; x < W; x += 20) {
+        ctx.fillRect(x, TILE * 0.2, 10, TILE * 0.6);
+      }
+      ctx.fillStyle = '#4ade80';
+      ctx.font = `bold ${TILE * 0.32}px Segoe UI`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🏁  F I N I S H', W / 2, TILE / 2);
+
+      // Start zone (bottom)
+      ctx.fillStyle = '#1c3a1c';
+      ctx.fillRect(0, (ROWS - 1) * TILE, W, TILE);
+      ctx.fillStyle = 'rgba(134,239,172,0.1)';
+      for (let x = 0; x < W; x += 20) {
+        ctx.fillRect(x, (ROWS - 1) * TILE + TILE * 0.2, 10, TILE * 0.6);
+      }
+    }
+
+    function drawCar(car) {
+      const r = 7;
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      roundRect(car.x + 3, car.y + car.h - 4, car.w - 4, 6, 3);
+      ctx.fill();
+
+      // Body
+      ctx.fillStyle = car.color;
+      roundRect(car.x, car.y, car.w, car.h, r);
+      ctx.fill();
+
+      // Roof highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      roundRect(car.x + car.w * 0.2, car.y + 3, car.w * 0.6, car.h * 0.45, 4);
+      ctx.fill();
+
+      // Windshield
+      ctx.fillStyle = 'rgba(186,230,253,0.5)';
+      const goRight = car.speed > 0;
+      roundRect(
+        goRight ? car.x + car.w * 0.52 : car.x + car.w * 0.15,
+        car.y + 4, car.w * 0.28, car.h * 0.5, 3
+      );
+      ctx.fill();
+
+      // Headlights
+      ctx.fillStyle = goRight ? '#fef9c3' : '#fca5a5';
+      const hx = goRight ? car.x + car.w - 5 : car.x + 2;
+      ctx.fillRect(hx, car.y + 5, 3, 5);
+      ctx.fillRect(hx, car.y + car.h - 10, 3, 5);
+    }
+
+    function drawChicken() {
+      // Blink during death
+      if (gameState === 'dead' && Math.floor(deathTimer / 7) % 2 === 0) return;
+      const x = chicken.col * TILE + TILE / 2;
+      const y = chicken.row * TILE + TILE / 2 + 2;
+      ctx.font = `${TILE * 0.72}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🐔', x, y);
+    }
+
+    function drawScoreFlash() {
+      if (scoreFlash <= 0) return;
+      const alpha = scoreFlash / 40;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#f6e05e';
+      ctx.font = 'bold 36px Segoe UI';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('✓ Nice!', W / 2, H / 2);
+      ctx.restore();
+    }
+
+    function drawOverlay(title, titleColor, sub1, sub2) {
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = titleColor;
+      ctx.font = 'bold 38px Segoe UI';
+      ctx.fillText(title, W / 2, H / 2 - 28);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '20px Segoe UI';
+      if (sub1) ctx.fillText(sub1, W / 2, H / 2 + 16);
+      if (sub2) {
+        ctx.fillStyle = '#f6e05e';
+        ctx.font = 'bold 16px Segoe UI';
+        ctx.fillText(sub2, W / 2, H / 2 + 52);
+      }
+    }
+
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    // ── Game loop ─────────────────────────────────────────────────────────────
+
+    function update() {
+      if (gameState === 'idle' || gameState === 'gameover') return;
+
+      cars.forEach(car => {
+        car.x += car.speed;
+        if (car.speed > 0 && car.x > W)        car.x = -car.w;
+        if (car.speed < 0 && car.x + car.w < 0) car.x = W;
+      });
+
+      if (gameState === 'playing') {
+        checkCollision();
+        if (scoreFlash > 0) scoreFlash--;
+      } else if (gameState === 'dead') {
+        deathTimer--;
+        if (deathTimer <= 0) resumeAfterDeath();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      drawBackground();
+
+      if (gameState === 'idle') {
+        drawOverlay(
+          '🐔 Chicken Crossing', '#f6e05e',
+          'Dodge the cars, reach the finish!',
+          null
+        );
+        return;
+      }
+
+      cars.forEach(drawCar);
+      drawChicken();
+      drawScoreFlash();
+
+      if (gameState === 'gameover') {
+        drawOverlay(
+          'GAME OVER', '#fc8181',
+          `Score: ${score}`,
+          score >= best && score > 0 ? '🏆 New Best!' : null
+        );
+      }
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // ── Input ─────────────────────────────────────────────────────────────────
+
+    document.addEventListener('keydown', e => {
+      const map = {
+        ArrowUp:    [0, -1], w: [0, -1],
+        ArrowDown:  [0,  1], s: [0,  1],
+        ArrowLeft:  [-1, 0], a: [-1, 0],
+        ArrowRight: [ 1, 0], d: [ 1, 0],
+      };
+      const d = map[e.key] || map[e.key.toLowerCase()];
+      if (d) { moveChicken(d[0], d[1]); e.preventDefault(); }
+    });
+
+    document.getElementById('btnStart').addEventListener('click', startGame);
+
+    const dpadMap = { dUp: [0,-1], dDown: [0,1], dLeft: [-1,0], dRight: [1,0] };
+    Object.entries(dpadMap).forEach(([id, d]) => {
+      const btn = document.getElementById(id);
+      ['click', 'touchstart'].forEach(evt =>
+        btn.addEventListener(evt, e => {
+          e.preventDefault();
+          moveChicken(d[0], d[1]);
+        }, { passive: false })
+      );
+    });
+
+    // ── Boot ──────────────────────────────────────────────────────────────────
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
