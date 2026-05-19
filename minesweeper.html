@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minesweeper</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #0d1117;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: 'Segoe UI', sans-serif;
+      color: #e2e8f0;
+      padding: 16px 16px 32px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 760px;
+      margin-bottom: 12px;
+    }
+    header h1 { font-size: 22px; font-weight: 700; color: #63b3ed; letter-spacing: 1px; }
+    .back-link { color: #a0aec0; text-decoration: none; font-size: 13px; transition: color 0.2s; }
+    .back-link:hover { color: #63b3ed; }
+
+    /* ── HUD ── */
+    .hud {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #161b22;
+      border: 2px solid #2d3748;
+      border-radius: 14px;
+      padding: 10px 24px;
+      width: 100%;
+      max-width: 760px;
+      margin-bottom: 14px;
+    }
+    .hud-block { text-align: center; min-width: 64px; }
+    .hud-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #718096; margin-bottom: 2px; }
+    .hud-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: #63b3ed;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 2px;
+    }
+    #btnFace {
+      font-size: 34px;
+      background: none;
+      border: 2px solid #2d3748;
+      border-radius: 50%;
+      width: 52px;
+      height: 52px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s, border-color 0.2s;
+      flex-shrink: 0;
+    }
+    #btnFace:hover { border-color: #4a5568; }
+    #btnFace:active { transform: scale(0.9); }
+
+    /* ── Board ── */
+    .board-wrap {
+      overflow: auto;
+      max-width: 100%;
+      background: #161b22;
+      border: 2px solid #2d3748;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    #board {
+      display: grid;
+      gap: 3px;
+      user-select: none;
+    }
+
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.07s, transform 0.06s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      line-height: 1;
+    }
+    .cell.hidden {
+      background: #2d3748;
+      border: 1px solid #4a5568;
+    }
+    .cell.hidden:hover { background: #3a4a5c; }
+    .cell.hidden:active { transform: scale(0.88); }
+    .cell.flagged {
+      background: #2d3748;
+      border: 1px solid #4a5568;
+    }
+    .cell.revealed {
+      background: #1a2234;
+      border: 1px solid #21262d;
+      cursor: default;
+    }
+    .cell.boom {
+      background: #7f1d1d !important;
+      border: 1px solid #f87171 !important;
+    }
+    /* classic Minesweeper number colours */
+    .n1 { color: #63b3ed; }
+    .n2 { color: #68d391; }
+    .n3 { color: #fc8181; }
+    .n4 { color: #9f7aea; }
+    .n5 { color: #f56565; }
+    .n6 { color: #4fd1c5; }
+    .n7 { color: #a0aec0; }
+    .n8 { color: #718096; }
+
+    /* ── Controls ── */
+    .controls { margin-top: 14px; display: flex; gap: 12px; }
+    .action-btn {
+      padding: 10px 28px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #2b6cb0;
+      color: #fff;
+      transition: transform 0.1s, background 0.15s;
+    }
+    .action-btn:hover { background: #3182ce; }
+    .action-btn:active { transform: scale(0.95); }
+
+    .hint { margin-top: 10px; font-size: 12px; color: #4a5568; text-align: center; }
+
+    /* ── Difficulty modal ── */
+    #diffModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.78);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      animation: fadeIn 0.2s ease;
+    }
+    #diffModal.hidden { display: none; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .diff-box {
+      background: #161b22;
+      border: 2px solid #2d3748;
+      border-radius: 20px;
+      padding: 32px 28px;
+      text-align: center;
+      width: min(360px, calc(100vw - 40px));
+    }
+    .diff-box h2 { font-size: 22px; font-weight: 800; color: #63b3ed; margin-bottom: 6px; }
+    .diff-box p  { font-size: 13px; color: #718096; margin-bottom: 24px; }
+    .diff-levels { display: flex; flex-direction: column; gap: 12px; }
+    .diff-btn {
+      width: 100%;
+      padding: 14px 20px;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: transform 0.1s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .diff-btn:active { transform: scale(0.97); }
+    .diff-btn .diff-icon { font-size: 26px; flex-shrink: 0; }
+    .diff-btn .diff-info { text-align: left; }
+    .diff-btn .diff-name { font-size: 16px; display: block; }
+    .diff-btn .diff-desc { font-size: 11px; font-weight: 400; opacity: 0.75; display: block; margin-top: 2px; }
+    .diff-btn.easy     { background: #1a2e1a; color: #86efac; border-color: #166534; }
+    .diff-btn.easy:hover { border-color: #4ade80; box-shadow: 0 0 14px rgba(74,222,128,0.2); }
+    .diff-btn.advanced { background: #2a1f0e; color: #fcd34d; border-color: #92400e; }
+    .diff-btn.advanced:hover { border-color: #f59e0b; box-shadow: 0 0 14px rgba(245,158,11,0.2); }
+    .diff-btn.pro      { background: #2a1010; color: #fca5a5; border-color: #7f1d1d; }
+    .diff-btn.pro:hover { border-color: #f87171; box-shadow: 0 0 14px rgba(248,113,113,0.2); }
+  </style>
+</head>
+<body>
+
+  <!-- Difficulty modal (shown on load and on new game) -->
+  <div id="diffModal">
+    <div class="diff-box">
+      <h2>💣 Minesweeper</h2>
+      <p>Choose your difficulty</p>
+      <div class="diff-levels">
+        <button class="diff-btn easy" data-level="easy">
+          <span class="diff-icon">🌱</span>
+          <span class="diff-info">
+            <span class="diff-name">Easy</span>
+            <span class="diff-desc">9 × 9 grid · 10 mines</span>
+          </span>
+        </button>
+        <button class="diff-btn advanced" data-level="advanced">
+          <span class="diff-icon">🔥</span>
+          <span class="diff-info">
+            <span class="diff-name">Advanced</span>
+            <span class="diff-desc">16 × 16 grid · 40 mines</span>
+          </span>
+        </button>
+        <button class="diff-btn pro" data-level="pro">
+          <span class="diff-icon">💀</span>
+          <span class="diff-info">
+            <span class="diff-name">Pro</span>
+            <span class="diff-desc">30 × 16 grid · 99 mines</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <h1>💣 Minesweeper</h1>
+    <a class="back-link" href="index.html">← Back to Portal</a>
+  </header>
+
+  <div class="hud">
+    <div class="hud-block">
+      <div class="hud-label">Mines</div>
+      <div class="hud-value" id="mineCount">000</div>
+    </div>
+    <button id="btnFace" title="New game">🙂</button>
+    <div class="hud-block">
+      <div class="hud-label">Time</div>
+      <div class="hud-value" id="timer">000</div>
+    </div>
+  </div>
+
+  <div class="board-wrap">
+    <div id="board"></div>
+  </div>
+
+  <div class="controls">
+    <button class="action-btn" id="btnNew">New Game</button>
+  </div>
+  <div class="hint">Left-click / tap to reveal &nbsp;·&nbsp; Right-click / long-press to flag &nbsp;·&nbsp; Space = new game</div>
+
+  <script>
+    // ── Level configs ─────────────────────────────────────────────────────────
+
+    const LEVELS = {
+      easy:     { cols: 9,  rows: 9,  mines: 10, cellSize: 40 },
+      advanced: { cols: 16, rows: 16, mines: 40, cellSize: 34 },
+      pro:      { cols: 30, rows: 16, mines: 99, cellSize: 28 },
+    };
+
+    // ── State ─────────────────────────────────────────────────────────────────
+
+    let cfg;
+    let grid;       // number grid: -1 = mine, 0-8 = adjacent count
+    let revealed;   // bool grid
+    let flagged;    // bool grid
+    let mineSet;    // Set of (r*cols + c) indices
+    let gameState = 'idle';   // idle | playing | won | lost
+    let firstClick = true;
+    let timerVal = 0;
+    let timerInterval = null;
+
+    // ── DOM refs ──────────────────────────────────────────────────────────────
+
+    const boardEl     = document.getElementById('board');
+    const mineCountEl = document.getElementById('mineCount');
+    const timerEl     = document.getElementById('timer');
+    const btnFace     = document.getElementById('btnFace');
+    const btnNew      = document.getElementById('btnNew');
+    const diffModal   = document.getElementById('diffModal');
+
+    // ── Game init ─────────────────────────────────────────────────────────────
+
+    function startGame(level) {
+      cfg        = LEVELS[level];
+      grid       = Array.from({ length: cfg.rows }, () => new Array(cfg.cols).fill(0));
+      revealed   = Array.from({ length: cfg.rows }, () => new Array(cfg.cols).fill(false));
+      flagged    = Array.from({ length: cfg.rows }, () => new Array(cfg.cols).fill(false));
+      mineSet    = new Set();
+      firstClick = true;
+      gameState  = 'idle';
+
+      stopTimer();
+      timerVal = 0;
+      renderTimer();
+      renderMineCount();
+      btnFace.textContent = '🙂';
+
+      renderBoard();
+    }
+
+    function placeMines(safeR, safeC) {
+      // Build a safe zone around the first click so it always opens space
+      const safe = new Set();
+      for (let dr = -1; dr <= 1; dr++)
+        for (let dc = -1; dc <= 1; dc++) {
+          const r = safeR + dr, c = safeC + dc;
+          if (r >= 0 && r < cfg.rows && c >= 0 && c < cfg.cols)
+            safe.add(r * cfg.cols + c);
+        }
+
+      while (mineSet.size < cfg.mines) {
+        const idx = Math.floor(Math.random() * cfg.rows * cfg.cols);
+        if (!safe.has(idx)) mineSet.add(idx);
+      }
+
+      // Fill number grid
+      for (let r = 0; r < cfg.rows; r++)
+        for (let c = 0; c < cfg.cols; c++)
+          grid[r][c] = mineSet.has(r * cfg.cols + c) ? -1 : adjacentMines(r, c);
+    }
+
+    function adjacentMines(r, c) {
+      let n = 0;
+      for (let dr = -1; dr <= 1; dr++)
+        for (let dc = -1; dc <= 1; dc++) {
+          const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < cfg.rows && nc >= 0 && nc < cfg.cols)
+            if (mineSet.has(nr * cfg.cols + nc)) n++;
+        }
+      return n;
+    }
+
+    // ── Board rendering ───────────────────────────────────────────────────────
+
+    function renderBoard() {
+      const cs = cfg.cellSize;
+      boardEl.style.gridTemplateColumns = `repeat(${cfg.cols}, ${cs}px)`;
+      boardEl.innerHTML = '';
+
+      for (let r = 0; r < cfg.rows; r++) {
+        for (let c = 0; c < cfg.cols; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell hidden';
+          cell.style.width  = cs + 'px';
+          cell.style.height = cs + 'px';
+          cell.style.fontSize = Math.round(cs * 0.46) + 'px';
+          cell.dataset.r = r;
+          cell.dataset.c = c;
+
+          cell.addEventListener('click', onCellClick);
+          cell.addEventListener('contextmenu', onCellRightClick);
+          addLongPress(cell);
+
+          boardEl.appendChild(cell);
+        }
+      }
+    }
+
+    function refreshCell(r, c) {
+      const cell = boardEl.children[r * cfg.cols + c];
+      if (!cell) return;
+
+      cell.className = 'cell';
+      cell.textContent = '';
+
+      if (flagged[r][c]) {
+        cell.classList.add('flagged');
+        cell.textContent = '🚩';
+        return;
+      }
+
+      if (!revealed[r][c]) {
+        cell.classList.add('hidden');
+        return;
+      }
+
+      const v = grid[r][c];
+      if (v === -1) {
+        cell.classList.add('revealed', 'boom');
+        cell.textContent = '💥';
+      } else {
+        cell.classList.add('revealed');
+        if (v > 0) {
+          cell.classList.add('n' + v);
+          cell.textContent = v;
+        }
+      }
+    }
+
+    function exposeAllMines(hitR, hitC) {
+      for (const idx of mineSet) {
+        const r = Math.floor(idx / cfg.cols);
+        const c = idx % cfg.cols;
+        if (r === hitR && c === hitC) continue;  // already shown as 💥
+        if (flagged[r][c]) continue;             // correctly flagged, leave it
+        const cell = boardEl.children[idx];
+        cell.className = 'cell revealed';
+        cell.textContent = '💣';
+      }
+    }
+
+    // ── Interactions ──────────────────────────────────────────────────────────
+
+    function onCellClick(e) {
+      const r = +e.currentTarget.dataset.r;
+      const c = +e.currentTarget.dataset.c;
+      reveal(r, c);
+    }
+
+    function onCellRightClick(e) {
+      e.preventDefault();
+      const r = +e.currentTarget.dataset.r;
+      const c = +e.currentTarget.dataset.c;
+      toggleFlag(r, c);
+    }
+
+    function reveal(r, c) {
+      if (gameState === 'won' || gameState === 'lost') return;
+      if (revealed[r][c] || flagged[r][c]) return;
+
+      if (firstClick) {
+        firstClick = false;
+        gameState  = 'playing';
+        placeMines(r, c);
+        startTimer();
+      }
+
+      flood(r, c);
+      checkWin();
+    }
+
+    function toggleFlag(r, c) {
+      if (gameState === 'won' || gameState === 'lost') return;
+      if (revealed[r][c]) return;
+
+      // Allow flagging even before first click
+      flagged[r][c] = !flagged[r][c];
+      refreshCell(r, c);
+      renderMineCount();
+    }
+
+    function flood(r, c) {
+      if (r < 0 || r >= cfg.rows || c < 0 || c >= cfg.cols) return;
+      if (revealed[r][c] || flagged[r][c]) return;
+
+      revealed[r][c] = true;
+
+      if (grid[r][c] === -1) {
+        refreshCell(r, c);
+        gameState = 'lost';
+        stopTimer();
+        btnFace.textContent = '😵';
+        exposeAllMines(r, c);
+        return;
+      }
+
+      refreshCell(r, c);
+
+      // Cascade through empty cells
+      if (grid[r][c] === 0) {
+        for (let dr = -1; dr <= 1; dr++)
+          for (let dc = -1; dc <= 1; dc++)
+            if (dr !== 0 || dc !== 0)
+              flood(r + dr, c + dc);
+      }
+    }
+
+    function checkWin() {
+      if (gameState !== 'playing') return;
+      const safeCells = cfg.rows * cfg.cols - cfg.mines;
+      let count = 0;
+      for (let r = 0; r < cfg.rows; r++)
+        for (let c = 0; c < cfg.cols; c++)
+          if (revealed[r][c]) count++;
+
+      if (count === safeCells) {
+        gameState = 'won';
+        stopTimer();
+        btnFace.textContent = '😎';
+        // Flag any remaining un-flagged mines
+        for (const idx of mineSet) {
+          const r = Math.floor(idx / cfg.cols);
+          const c = idx % cfg.cols;
+          if (!flagged[r][c]) { flagged[r][c] = true; refreshCell(r, c); }
+        }
+        renderMineCount();
+      }
+    }
+
+    // ── Long press (flag on mobile) ───────────────────────────────────────────
+
+    function addLongPress(cell) {
+      let t = null;
+      cell.addEventListener('touchstart', () => {
+        t = setTimeout(() => { t = null; toggleFlag(+cell.dataset.r, +cell.dataset.c); }, 450);
+      }, { passive: true });
+      const cancel = () => { if (t) { clearTimeout(t); t = null; } };
+      cell.addEventListener('touchend',  cancel);
+      cell.addEventListener('touchmove', cancel);
+    }
+
+    // ── Timer ─────────────────────────────────────────────────────────────────
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timerVal = Math.min(timerVal + 1, 999);
+        renderTimer();
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    function renderTimer() {
+      timerEl.textContent = String(timerVal).padStart(3, '0');
+    }
+
+    function renderMineCount() {
+      if (!cfg) return;
+      const flags = flagged.flat().filter(Boolean).length;
+      const remaining = cfg.mines - flags;
+      mineCountEl.textContent = String(Math.max(remaining, 0)).padStart(3, '0');
+    }
+
+    // ── Buttons & keyboard ────────────────────────────────────────────────────
+
+    const showModal = () => diffModal.classList.remove('hidden');
+
+    btnFace.addEventListener('click', showModal);
+    btnNew.addEventListener('click',  showModal);
+
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        diffModal.classList.add('hidden');
+        startGame(btn.dataset.level);
+      });
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === ' ') { e.preventDefault(); showModal(); }
+    });
+  </script>
+</body>
+</html>
