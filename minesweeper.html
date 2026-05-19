@@ -264,7 +264,7 @@
   <div class="controls">
     <button class="action-btn" id="btnNew">New Game</button>
   </div>
-  <div class="hint">Tap to reveal &nbsp;·&nbsp; Long-press / right-click to flag &nbsp;·&nbsp; Tap a number to chord-reveal &nbsp;·&nbsp; Drag to pan &nbsp;·&nbsp; Space = new game</div>
+  <div class="hint">Tap to reveal &nbsp;·&nbsp; Double-tap / right-click to flag &nbsp;·&nbsp; Tap a number to chord-reveal &nbsp;·&nbsp; Drag to pan &nbsp;·&nbsp; Space = new game</div>
 
   <script>
     // ── Level configs ─────────────────────────────────────────────────────────
@@ -294,6 +294,9 @@
     let isPanning = false;
     let didPan = false;
 
+    // double-tap-to-flag state
+    let pendingReveal = null; // { r, c, timer }
+
     // ── DOM refs ──────────────────────────────────────────────────────────────
 
     const boardEl     = document.getElementById('board');
@@ -314,6 +317,8 @@
       mineSet    = new Set();
       firstClick = true;
       gameState  = 'idle';
+
+      if (pendingReveal) { clearTimeout(pendingReveal.timer); pendingReveal = null; }
 
       stopTimer();
       timerVal = 0;
@@ -376,7 +381,6 @@
 
           cell.addEventListener('click', onCellClick);
           cell.addEventListener('contextmenu', onCellRightClick);
-          addLongPress(cell);
 
           boardEl.appendChild(cell);
         }
@@ -428,18 +432,43 @@
 
     // ── Interactions ──────────────────────────────────────────────────────────
 
+    const DOUBLE_TAP_MS = 250;
+
     function onCellClick(e) {
       const r = +e.currentTarget.dataset.r;
       const c = +e.currentTarget.dataset.c;
 
-      // Chord click: clicking a revealed number whose flag-count matches its value
-      // reveals all non-flagged neighbours (risky if a flag is wrong!)
-      if (revealed[r][c] && grid[r][c] > 0) {
-        chordReveal(r, c);
+      // Revealed number cells: instant chord-click, no double-tap handling needed
+      if (revealed[r][c]) {
+        if (grid[r][c] > 0) chordReveal(r, c);
         return;
       }
 
-      reveal(r, c);
+      // Hidden cells: wait to see if it's a double-tap (flag) or single tap (reveal)
+      if (pendingReveal && pendingReveal.r === r && pendingReveal.c === c) {
+        // Same cell tapped again within the window → double-tap → flag
+        clearTimeout(pendingReveal.timer);
+        pendingReveal = null;
+        toggleFlag(r, c);
+        return;
+      }
+
+      // Different cell tapped while one is pending → fire the pending reveal now
+      if (pendingReveal) {
+        clearTimeout(pendingReveal.timer);
+        const { r: pr, c: pc } = pendingReveal;
+        pendingReveal = null;
+        reveal(pr, pc);
+      }
+
+      // Schedule reveal; if a second tap on the same cell arrives first, it becomes a flag
+      pendingReveal = {
+        r, c,
+        timer: setTimeout(() => {
+          pendingReveal = null;
+          reveal(r, c);
+        }, DOUBLE_TAP_MS),
+      };
     }
 
     function onCellRightClick(e) {
@@ -553,16 +582,6 @@
 
     // ── Long press (flag on mobile) ───────────────────────────────────────────
 
-    function addLongPress(cell) {
-      let t = null;
-      cell.addEventListener('touchstart', () => {
-        t = setTimeout(() => { t = null; toggleFlag(+cell.dataset.r, +cell.dataset.c); }, 450);
-      }, { passive: true });
-      const cancel = () => { if (t) { clearTimeout(t); t = null; } };
-      cell.addEventListener('touchend',  cancel);
-      cell.addEventListener('touchmove', cancel);
-    }
-
     // ── Timer ─────────────────────────────────────────────────────────────────
 
     function startTimer() {
@@ -635,6 +654,8 @@
       panOriginY = panY;
       try { boardWrapEl.setPointerCapture(e.pointerId); } catch (_) {}
       boardWrapEl.classList.add('panning');
+      // Cancel any pending single-tap reveal so dragging never accidentally reveals a cell
+      if (pendingReveal) { clearTimeout(pendingReveal.timer); pendingReveal = null; }
     });
 
     boardWrapEl.addEventListener('pointermove', e => {
