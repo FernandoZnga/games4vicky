@@ -122,7 +122,9 @@ To get to the **🏁 FINISH LINE**, obviously. But there's a highway of absolute
 
 The classic Windows Minesweeper you know and fear, rebuilt with a slick dark theme. Reveal every safe tile without detonating a single mine.
 
-- **Classic rules** — left-click to reveal, right-click / long-press to flag
+- **Classic rules** — tap to reveal, double-tap / right-click to flag 🚩
+- **Chord-click** — tap a revealed number when its flags match to auto-reveal all safe neighbours (risky if you flagged wrong!)
+- **Drag to pan** — boards larger than your screen can be dragged in any direction to reach every cell
 - **First-click safety** — mines never spawn under your first tap, guaranteed
 - **Cascade reveal** — empty cells flood-fill automatically like the real thing
 - **HUD** — mine counter, timer, and the legendary smiley face button 🙂😎😵
@@ -142,13 +144,16 @@ The classic Windows Minesweeper you know and fear, rebuilt with a slick dark the
 
 Every game supports **keyboard**, **mouse/tap**, and **on-screen D-pad** (mobile).
 
-| Action | Keyboard | Mobile |
-|--------|----------|--------|
-| Move Up | `↑` or `W` | ▲ D-pad |
-| Move Down | `↓` or `S` | ▼ D-pad |
-| Move Left | `←` or `A` | ◀ D-pad |
-| Move Right | `→` or `D` | ▶ D-pad |
-| Calculator input | Number keys, `Enter`, `Esc`, `Backspace` | Tap buttons |
+| Action | Keyboard | Mouse / Touch |
+|--------|----------|---------------|
+| Move (Snake, Chicken) | `↑ ↓ ← →` or `W A S D` | ▲▼◀▶ D-pad |
+| Start / New Round | `Space` | Tap Start button |
+| Calculator clear | `Space` or `Esc` | Tap AC |
+| Calculator input | Number keys, `Enter`, `Backspace` | Tap buttons |
+| Minesweeper reveal | Click / Tap | Tap |
+| Minesweeper flag | Right-click | Double-tap |
+| Minesweeper chord | Click a revealed number | Tap a revealed number |
+| Minesweeper pan | Click + drag | Drag |
 
 > 🗒️ D-pad is a **translucent overlay** on top of the game canvas — it stays out of the way on desktop, but becomes your best friend on mobile.
 
