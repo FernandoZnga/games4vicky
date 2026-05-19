@@ -432,6 +432,7 @@
         if (d.x !== -dir.x || d.y !== -dir.y) nextDir = d;
         e.preventDefault();
       }
+      if (e.key === ' ') { e.preventDefault(); document.getElementById('btnStart').click(); }
     });
 
     document.getElementById('btnStart').addEventListener('click', () => {

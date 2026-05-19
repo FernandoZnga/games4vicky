@@ -393,6 +393,10 @@
       });
     });
 
+    document.addEventListener('keydown', e => {
+      if (e.key === ' ') { e.preventDefault(); document.getElementById('btnNew').click(); }
+    });
+
     document.getElementById('btnNew').addEventListener('click', () => {
       initGame();
       // Show pass screen for X to start
