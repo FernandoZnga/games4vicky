@@ -654,8 +654,6 @@
       panOriginY = panY;
       try { boardWrapEl.setPointerCapture(e.pointerId); } catch (_) {}
       boardWrapEl.classList.add('panning');
-      // Cancel any pending single-tap reveal so dragging never accidentally reveals a cell
-      if (pendingReveal) { clearTimeout(pendingReveal.timer); pendingReveal = null; }
     });
 
     boardWrapEl.addEventListener('pointermove', e => {
@@ -664,6 +662,8 @@
       const dy = e.clientY - panStartY;
       if (!didPan && (Math.abs(dx) > PAN_THRESHOLD || Math.abs(dy) > PAN_THRESHOLD)) {
         didPan = true;
+        // Only now do we know it's a drag — cancel any pending reveal so it doesn't fire
+        if (pendingReveal) { clearTimeout(pendingReveal.timer); pendingReveal = null; }
       }
       if (didPan) {
         panX = panOriginX + dx;
