@@ -254,7 +254,7 @@
   <div class="controls">
     <button class="action-btn" id="btnNew">New Game</button>
   </div>
-  <div class="hint">Left-click / tap to reveal &nbsp;·&nbsp; Right-click / long-press to flag &nbsp;·&nbsp; Space = new game</div>
+  <div class="hint">Left-click / tap to reveal &nbsp;·&nbsp; Right-click / long-press to flag &nbsp;·&nbsp; Click a number to chord-reveal &nbsp;·&nbsp; Space = new game</div>
 
   <script>
     // ── Level configs ─────────────────────────────────────────────────────────
@@ -412,6 +412,14 @@
     function onCellClick(e) {
       const r = +e.currentTarget.dataset.r;
       const c = +e.currentTarget.dataset.c;
+
+      // Chord click: clicking a revealed number whose flag-count matches its value
+      // reveals all non-flagged neighbours (risky if a flag is wrong!)
+      if (revealed[r][c] && grid[r][c] > 0) {
+        chordReveal(r, c);
+        return;
+      }
+
       reveal(r, c);
     }
 
@@ -445,6 +453,35 @@
       flagged[r][c] = !flagged[r][c];
       refreshCell(r, c);
       renderMineCount();
+    }
+
+    function chordReveal(r, c) {
+      if (gameState === 'won' || gameState === 'lost') return;
+
+      // Count how many neighbours are flagged
+      let flagCount = 0;
+      for (let dr = -1; dr <= 1; dr++)
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < cfg.rows && nc >= 0 && nc < cfg.cols)
+            if (flagged[nr][nc]) flagCount++;
+        }
+
+      // Only chord if flags match the cell's number
+      if (flagCount !== grid[r][c]) return;
+
+      // Reveal every non-flagged, non-revealed neighbour
+      for (let dr = -1; dr <= 1; dr++)
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < cfg.rows && nc >= 0 && nc < cfg.cols)
+            if (!flagged[nr][nc] && !revealed[nr][nc])
+              flood(nr, nc);
+        }
+
+      checkWin();
     }
 
     function flood(r, c) {

@@ -35,7 +35,7 @@
 
 ## 🗺️ STAGE SELECT
 
-> *Four games. One portal. Infinite procrastination.*
+> *Five games. One portal. Infinite procrastination.*
 
 | # | Game | Genre | Difficulty | Players |
 |---|------|-------|------------|---------|
@@ -43,6 +43,7 @@
 | 🐍 | **Number Snake** | Arcade | ⭐⭐ Medium | 1 |
 | ✕○ | **Tic Tac Toe** | Strategy | ⭐ Chill | 2 |
 | 🐔 | **Chicken Crossing** | Arcade / Reflex | ⭐⭐⭐ Sweaty | 1 |
+| 💣 | **Minesweeper** | Puzzle / Logic | ⭐ to ⭐⭐⭐ | 1 |
 
 ---
 
@@ -108,8 +109,30 @@ To get to the **🏁 FINISH LINE**, obviously. But there's a highway of absolute
 - 3 lives. Lose them all = game over. Brutal.
 - Best score saved locally
 - Mobile D-pad overlay for on-the-go anxiety
+- **3 difficulty levels** — Beginner 🌱, Advanced 🔥, Pro 💀
 
 **Pro tip:** Diagonal thinking doesn't exist here. Pick your lane, commit, and pray.
+
+</details>
+
+<details>
+<summary><b>💣 Minesweeper — "One wrong click and it's all over"</b></summary>
+
+<br>
+
+The classic Windows Minesweeper you know and fear, rebuilt with a slick dark theme. Reveal every safe tile without detonating a single mine.
+
+- **Classic rules** — left-click to reveal, right-click / long-press to flag
+- **First-click safety** — mines never spawn under your first tap, guaranteed
+- **Cascade reveal** — empty cells flood-fill automatically like the real thing
+- **HUD** — mine counter, timer, and the legendary smiley face button 🙂😎😵
+- **3 board sizes:**
+  - 🌱 **Easy** — 9 × 9, 10 mines
+  - 🔥 **Advanced** — 16 × 16, 40 mines
+  - 💀 **Pro** — 30 × 16, 99 mines (classic Expert)
+- Best score not tracked — every game is a fresh nightmare
+
+**Pro tip:** Corners and edges have fewer neighbours — start there to open up the board fast.
 
 </details>
 
@@ -139,7 +162,8 @@ games4vicky/
 ├── calculator.html   ← 🧮 Calculator
 ├── snake.html        ← 🐍 Number Snake
 ├── tictactoe.html    ← ✕○ Tic Tac Toe
-└── chicken.html      ← 🐔 Chicken Crossing
+├── chicken.html      ← 🐔 Chicken Crossing
+└── minesweeper.html  ← 💣 Minesweeper
 ```
 
 **Zero build steps. Zero frameworks. Zero nonsense.**
@@ -188,9 +212,9 @@ Every `git push` → live in seconds. No CI needed. Pure HTML magic.
 
 | Stat | Value |
 |------|-------|
-| 📦 Total files | 5 HTML files |
-| 🧩 Games | 4 |
-| 📏 Avg file size | ~10 KB |
+| 📦 Total files | 6 HTML files |
+| 🧩 Games | 5 |
+| 📏 Avg file size | ~12 KB |
 | 📡 Network requests at runtime | 0 |
 | 🍪 Cookies used | 0 |
 | 🔐 Data sent to servers | 0 |
@@ -204,7 +228,7 @@ All games share the same visual DNA:
 
 - **Background:** `#0d1117` — deep space dark
 - **Cards/surfaces:** `#161b22` — GitHub-dark inspired
-- **Accent — Blue:** `#63b3ed` (Calculator)
+- **Accent — Blue:** `#63b3ed` (Calculator, Minesweeper)
 - **Accent — Green:** `#68d391` (Snake)
 - **Accent — Orange:** `#f6ad55` (Tic Tac Toe)
 - **Accent — Yellow:** `#f6e05e` (Chicken Crossing)
