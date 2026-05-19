@@ -373,7 +373,8 @@
 
     // ── Game state ────────────────────────────────────────────────────────────
 
-    let board, piece, nextPiece, holdPiece, canHold;
+    let board = Array.from({ length: ROWS }, () => new Array(COLS).fill(null));
+    let piece, nextPiece, holdPiece, canHold;
     let score, level, lines, startLevel;
     let gameState = 'idle';   // idle | playing | paused | clearing | over
     let bag = [];
@@ -426,12 +427,12 @@
 
     // ── Movement ──────────────────────────────────────────────────────────────
 
-    function tryMove(dx, dy) {
+    function tryMove(dx, dy, softDrop = false) {
       if (gameState !== 'playing') return false;
       if (collides(piece.matrix, piece.x + dx, piece.y + dy)) return false;
       piece.x += dx;
       piece.y += dy;
-      if (dy > 0) { score += dy; updateHUD(); dropCounter = 0; }
+      if (softDrop && dy > 0) { score += dy; updateHUD(); dropCounter = 0; }
       return true;
     }
 
@@ -711,7 +712,7 @@
         case 'ArrowRight':
         case 'd':         tryMove( 1, 0);             e.preventDefault(); break;
         case 'ArrowDown':
-        case 's':         if (!tryMove(0, 1)) lock(); e.preventDefault(); break;
+        case 's':         if (!tryMove(0, 1, true)) lock(); e.preventDefault(); break;
         case 'ArrowUp':
         case 'w':
         case 'z':
@@ -745,7 +746,7 @@
 
     addRepeat(document.getElementById('btnLeft'),  () => tryMove(-1, 0));
     addRepeat(document.getElementById('btnRight'), () => tryMove( 1, 0));
-    addRepeat(document.getElementById('btnDown'),  () => { if (!tryMove(0, 1)) lock(); }, 80);
+    addRepeat(document.getElementById('btnDown'),  () => { if (!tryMove(0, 1, true)) lock(); }, 80);
     document.getElementById('btnRotate').addEventListener('click', rotate);
     document.getElementById('btnHardDrop').addEventListener('click', hardDrop);
     document.getElementById('btnHold').addEventListener('click', hold);
