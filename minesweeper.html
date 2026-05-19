@@ -71,18 +71,26 @@
 
     /* ── Board ── */
     .board-wrap {
-      overflow: auto;
-      max-width: 100%;
+      overflow: hidden;
+      max-width: calc(100vw - 32px);
+      max-height: calc(100dvh - 230px);
+      min-height: 80px;
       background: #161b22;
       border: 2px solid #2d3748;
       border-radius: 14px;
       padding: 12px;
+      cursor: grab;
+      touch-action: none;
+      position: relative;
     }
+    .board-wrap.panning { cursor: grabbing; }
 
     #board {
       display: grid;
       gap: 3px;
       user-select: none;
+      transform-origin: top left;
+      will-change: transform;
     }
 
     .cell {
@@ -254,7 +262,7 @@
   <div class="controls">
     <button class="action-btn" id="btnNew">New Game</button>
   </div>
-  <div class="hint">Left-click / tap to reveal &nbsp;·&nbsp; Right-click / long-press to flag &nbsp;·&nbsp; Click a number to chord-reveal &nbsp;·&nbsp; Space = new game</div>
+  <div class="hint">Tap to reveal &nbsp;·&nbsp; Long-press / right-click to flag &nbsp;·&nbsp; Tap a number to chord-reveal &nbsp;·&nbsp; Drag to pan &nbsp;·&nbsp; Space = new game</div>
 
   <script>
     // ── Level configs ─────────────────────────────────────────────────────────
@@ -277,9 +285,17 @@
     let timerVal = 0;
     let timerInterval = null;
 
+    // pan state
+    let panX = 0, panY = 0;
+    let panStartX = 0, panStartY = 0;
+    let panOriginX = 0, panOriginY = 0;
+    let isPanning = false;
+    let didPan = false;
+
     // ── DOM refs ──────────────────────────────────────────────────────────────
 
     const boardEl     = document.getElementById('board');
+    const boardWrapEl = document.querySelector('.board-wrap');
     const mineCountEl = document.getElementById('mineCount');
     const timerEl     = document.getElementById('timer');
     const btnFace     = document.getElementById('btnFace');
@@ -303,6 +319,7 @@
       renderMineCount();
       btnFace.textContent = '🙂';
 
+      resetPan();
       renderBoard();
     }
 
@@ -585,6 +602,66 @@
 
     document.addEventListener('keydown', e => {
       if (e.key === ' ') { e.preventDefault(); showModal(); }
+    });
+
+    // ── Drag-to-pan ───────────────────────────────────────────────────────────
+
+    const PAN_THRESHOLD = 6; // px moved before we treat it as a drag
+
+    function resetPan() {
+      panX = 0; panY = 0;
+      boardEl.style.transform = 'translate(0px, 0px)';
+    }
+
+    function clampPan() {
+      const wrapW = boardWrapEl.clientWidth  - 24; // subtract padding (12px each side)
+      const wrapH = boardWrapEl.clientHeight - 24;
+      const boardW = boardEl.offsetWidth;
+      const boardH = boardEl.offsetHeight;
+      // Can only pan if board is larger than the visible area
+      panX = boardW > wrapW ? Math.min(0, Math.max(panX, -(boardW - wrapW))) : 0;
+      panY = boardH > wrapH ? Math.min(0, Math.max(panY, -(boardH - wrapH))) : 0;
+    }
+
+    boardWrapEl.addEventListener('pointerdown', e => {
+      if (e.button === 2) return; // right-click handled by contextmenu
+      isPanning = true;
+      didPan = false;
+      panStartX  = e.clientX;
+      panStartY  = e.clientY;
+      panOriginX = panX;
+      panOriginY = panY;
+      try { boardWrapEl.setPointerCapture(e.pointerId); } catch (_) {}
+      boardWrapEl.classList.add('panning');
+    });
+
+    boardWrapEl.addEventListener('pointermove', e => {
+      if (!isPanning) return;
+      const dx = e.clientX - panStartX;
+      const dy = e.clientY - panStartY;
+      if (!didPan && (Math.abs(dx) > PAN_THRESHOLD || Math.abs(dy) > PAN_THRESHOLD)) {
+        didPan = true;
+      }
+      if (didPan) {
+        panX = panOriginX + dx;
+        panY = panOriginY + dy;
+        clampPan();
+        boardEl.style.transform = `translate(${panX}px, ${panY}px)`;
+      }
+    });
+
+    boardWrapEl.addEventListener('pointerup', () => {
+      isPanning = false;
+      boardWrapEl.classList.remove('panning');
+      if (didPan) {
+        // Intercept the click that fires after pointerup so cells don't react
+        boardWrapEl.addEventListener('click', e => e.stopPropagation(), { capture: true, once: true });
+      }
+    });
+
+    boardWrapEl.addEventListener('pointercancel', () => {
+      isPanning = false;
+      boardWrapEl.classList.remove('panning');
     });
   </script>
 </body>
