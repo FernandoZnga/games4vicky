@@ -36,7 +36,7 @@
 
 ## 🗺️ STAGE SELECT
 
-> *Five games. One portal. Infinite procrastination.*
+> *Six games. One portal. Infinite procrastination.*
 
 | # | Game | Genre | Difficulty | Players |
 |---|------|-------|------------|---------|
@@ -45,6 +45,7 @@
 | ✕○ | **Tic Tac Toe** | Strategy | ⭐ Chill | 2 |
 | 🐔 | **Chicken Crossing** | Arcade / Reflex | ⭐⭐⭐ Sweaty | 1 |
 | 💣 | **Minesweeper** | Puzzle / Logic | ⭐ to ⭐⭐⭐ | 1 |
+| 🟦 | **Tetris** | Arcade / Puzzle | ⭐ to ⭐⭐⭐ | 1 |
 
 ---
 
@@ -141,7 +142,31 @@ The classic Windows Minesweeper you know and fear, rebuilt with a slick dark the
 
 ---
 
-## 🎮 CONTROLS
+<details>
+<summary><b>🟦 Tetris — "One more line… just one more"</b></summary>
+
+<br>
+
+The timeless falling-blocks classic, rebuilt from scratch with the dark theme. Spin, stack, and survive as long as you can — but the blocks fall faster with every level.
+
+- **All 7 tetrominoes** — I, O, T, S, Z, J, L with their classic colours
+- **7-bag randomiser** — every piece type appears once before any repeats
+- **Ghost piece** — a faint preview shows exactly where your piece will land
+- **Hold piece** — swap the current piece to a hold slot (C key / ⊟ button)
+- **Wall kicks (SRS-style)** — pieces kick off walls on rotation, just like standard Tetris
+- **Line-clear scoring** — 100 / 300 / 500 / 800 points × level for 1 / 2 / 3 / 4 lines
+- **Soft & hard drop** — +1 pt per soft-drop row, +2 pts per hard-drop row
+- **Level up** — every 10 lines cleared raises the level (and the speed!)
+- **3 starting difficulties:**
+  - 🌱 **Beginner** — Level 1, slow drops, learn the shapes
+  - 🔥 **Advanced** — Level 5, faster pace, higher score multiplier
+  - 💀 **Pro** — Level 10, pure chaos from block one
+- **Best score saved** — stored in `localStorage` so it survives refreshes
+- **Swipe to play on mobile** — tap canvas to rotate, swipe left/right to move, swipe down to hard drop
+
+**Pro tip:** Master the T-spin triple for obscene scores. Or just stack neatly and survive — no judgment.
+
+</details>
 
 Every game supports **keyboard**, **mouse/tap**, and **on-screen D-pad** (mobile).
 
@@ -155,6 +180,12 @@ Every game supports **keyboard**, **mouse/tap**, and **on-screen D-pad** (mobile
 | Minesweeper flag | Right-click | Double-tap |
 | Minesweeper chord | Click a revealed number | Tap a revealed number |
 | Minesweeper pan | Click + drag | Drag |
+| Tetris move | `← →` or `A D` | ◀ ▶ buttons or swipe |
+| Tetris rotate | `↑` / `W` / `Z` | ↺ button or tap canvas |
+| Tetris soft drop | `↓` / `S` | ▼ button |
+| Tetris hard drop | `Space` | ⬇ button or swipe down |
+| Tetris hold piece | `C` | ⊟ button |
+| Tetris pause | `P` | — |
 
 > 🗒️ D-pad is a **translucent overlay** on top of the game canvas — it stays out of the way on desktop, but becomes your best friend on mobile.
 
@@ -170,6 +201,7 @@ games4vicky/
 ├── tictactoe.html    ← ✕○ Tic Tac Toe
 ├── chicken.html      ← 🐔 Chicken Crossing
 └── minesweeper.html  ← 💣 Minesweeper
+└── tetris.html       ← 🟦 Tetris
 ```
 
 **Zero build steps. Zero frameworks. Zero nonsense.**
@@ -218,8 +250,8 @@ Every `git push` → live in seconds. No CI needed. Pure HTML magic.
 
 | Stat | Value |
 |------|-------|
-| 📦 Total files | 6 HTML files |
-| 🧩 Games | 5 |
+| 📦 Total files | 7 HTML files |
+| 🧩 Games | 6 |
 | 📏 Avg file size | ~12 KB |
 | 📡 Network requests at runtime | 0 |
 | 🍪 Cookies used | 0 |
@@ -238,6 +270,7 @@ All games share the same visual DNA:
 - **Accent — Green:** `#68d391` (Snake)
 - **Accent — Orange:** `#f6ad55` (Tic Tac Toe)
 - **Accent — Yellow:** `#f6e05e` (Chicken Crossing)
+- **Accent — Purple:** `#a78bfa` (Tetris)
 - **Font:** `Segoe UI` — clean, system-native
 
 ---
